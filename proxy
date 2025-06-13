@@ -1,6 +1,7 @@
 #!/bin/bash
 
-killall ssh
-set -e
-
-ssh -D 5555 -J node@93.95.97.12 node@45.82.254.167
+while true
+do
+	killall ssh
+	ssh -D 5555 -J node@93.95.97.12 node@45.12.134.91
+done
