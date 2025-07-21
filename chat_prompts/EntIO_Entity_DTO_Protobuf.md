@@ -1,37 +1,29 @@
 Ниже приведен SQL-скрипт создания таблицы, описывающий сущность и ее поля.
 ```sql
-create table rebates
-(
-    id             uuid             not null
-        constraint rebates_pk
-            primary key,
-    user_id        uuid             not null,
-    account_id     integer          not null,
-    currency     varchar(255)          not null,
-    level          integer          not null,
-    reward_percent double           not null,
-    traded_lots    double precision not null,
-    amount_paid    double precision not null,
-    amount_pending double precision not null,
-    amount_total   double precision not null,
-    period_start   timestamptz      not null,
-    period_end     timestamptz      not null,
-    created_at     timestamptz      not null,
-    updated_at     timestamptz      not null
+CREATE TABLE market_specifications (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(255) NOT NULL,
+    description TEXT,
+    avg_spread DOUBLE PRECISION,
+    commission_per_lot DOUBLE PRECISION,
+    margin DOUBLE PRECISION,
+    long_swap DOUBLE PRECISION,
+    short_swap DOUBLE PRECISION,
+    stop_level DOUBLE PRECISION,
+    swap_free BOOLEAN,
+    category VARCHAR(255)
 );
 
-create index rebates_account_id_index
-    on rebates (account_id);
-
-create index rebates_user_id_index
-    on rebates (user_id);
+-- Индексы на поля symbol и category
+CREATE INDEX idx_market_specifications_symbol ON market_specifications(symbol);
+CREATE INDEX idx_market_specifications_category ON market_specifications(category);
 ```
 
 На основании информации в этом SQL-коде нужно сгенерировать:
 
 1. Определение (схему) сущности на языке программирования Go с ипользованием фреймворка entgo.io (Ent.). 
 
-2. Для созданной сущности на языке Go и с фреймворком Ent сделай объект Repository, реализующий типовые CRUD-операции. При этом в методах, предполагающих сохранение данных (Create, Update), на вход должен подаваться сам полный объект сущности, а не отдельные поля.
+2. Для созданной сущности на языке Go и с фреймворком Ent сделай объект Repository, реализующий типовые CRUD-операции, а также методы поиска по полям, которые указаны как индексы. При этом в методах, предполагающих сохранение данных (Create, Update), на вход должен подаваться сам полный объект сущности, а не отдельные поля.
 Сделай пожалуйста так, чтобы в репозитории в названии каждого метода было употреблено название сущности, и чтобы в названиях методов название сущности стояло не в начале названия, а в конце или середине в зависимости от того, как оно лучше читается в английском языке. Сущность пусть лежит в пакете ent.
 Также, сделай так чтобы в зависимостях у репозитория был не Client, а ent.Database, а конкретный Client для работы с сущностью доставался бы уже внутри каждого метода из ent.Database.
 
