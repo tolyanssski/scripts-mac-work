@@ -1,0 +1,11 @@
+#!/bin/bash
+
+API_BASE="https://api.glexglobal.com"
+USER_IDENT_ID="18cab02e-2b88-418e-a5ef-14e8f9a14de2"
+DOCUMENT_ID="935cd124-4f29-4f80-9e21-abf72b867044"
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCUk9LRVIiLCJleHAiOjE3NTk5MTczOTUsImp0aSI6ImJkMjAzY2MxLTg2YzctNDJhMy04OGI0LTNlN2QxNzEwNjhhNCIsInVzZXJJZCI6IjcyYmIzNGYzLTliZGUtNDA2NS1hMmMyLThmYTNjMWU5MzAwMiIsIm10Q2xpZW50SWQiOjAsImVtYWlsIjoiYXV0b21hdGlvbkBmaW5vbGFiLnJ1In0.BLVSXNz7GAZb5hNdWBRSPCl5fUCt_Ot4f_9006MU1KQ"
+
+curl -sS --fail-with-body \
+  -X POST "$API_BASE/kyc/v1/identifications/$USER_IDENT_ID/documents/$DOCUMENT_ID/files" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'files[]=@babooshka.png;type=image/png'
