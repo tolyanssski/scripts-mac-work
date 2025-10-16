@@ -1,0 +1,11 @@
+В схеме protos/accounts/v1/accounts_service.proto:
+добавь метод ResolveUserIDByAccount, во входном запросе AccountID (int), на выходе либо string либо ничего (поле optional в response).
+
+В схеме protos/trading/v1/trading.proto:
+добавь метод GetAccountPositionSummaryByUser, во входном запросе UserID (string), на выходе в объекте response массив возвращаемых объектов с типом AccountPositionSummary. А сам тип AccountPositionSummary сгенерируй на основе этой структуры:
+type AccountPositionSummary struct {
+	AccountID     int       `json:"account_id"`
+	UserID        uuid.UUID `json:"user_id"`
+	TotalOpenLots float64   `json:"total_open_lots"`
+}
+(только UserID строка)
