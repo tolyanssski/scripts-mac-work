@@ -4,7 +4,34 @@
 
 2. Создай основную структуру нового сервиса: positions.Positions. Сгенерируй конструктор, через который в DI пробрось в структур зависимостями логгер, kafkaConsumer, repository и конфиг. При этом для логгера и репозитория создай локальные интерфейсы в пакете positions: у логгера методы нужные для записи в лог, а у репозитория CRUD-методы для работы с сущностью ent.Mt5Position.
 
-3. Создай публичный метод Run(), который запускает фоновую горутину, в которой слушать сообщения из Кафки, получаемые сообщения парсить в dto.MtPositionsMessage и пробрасывать в новый приватный метод processMessage(ctx, message).
+3. Создай публичный метод Run(), в которой слушать сообщения из Кафки, получаемые сообщения парсить в dto.MtPositionsMessage и пробрасывать в новый приватный метод processMessage(ctx, message).
+
+Пример того как использовать kafkaConsumer (взят из другого сервиса, сделай по аналогии, адаптируй под текущую задачу):
+
+func (k *KYC) Run(ctx context.Context) error {
+	return k.kafkaConsumer.Run(
+		ctx,
+		k.conf.Kafka.ConsumerGroupID,
+		k.Topics(),
+		func(ctx context.Context, message consumer.Message) error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
+			var e dto.KycEvent
+			err := json.Unmarshal(message.Content, &e)
+			if err != nil {
+				k.log.Errorf("cannot unmarshal JSON message: %v", err.Error())
+				return nil
+			}
+
+			e.Topic = message.Topic
+
+			return k.Event(ctx, &e)
+		},
+	)
+}
 
 4. В приватном методе-обработчике сообщения dto.MtPositionsMessage проверяй сначала два поля: type и action. Если type != "positon" - сразу завершай обработку без ошибок. Продолжай обработку сообщения только если тип равен "position". Далее проверяй поле action: оно может быть одним из трех значений: add, update, delete. 
  - Если add: создаешь новые инстансы сущности ent.Mt5Position из элементов массива records, сохраняешь в репозиторий при помощи вызова Create. 
