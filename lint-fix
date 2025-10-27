@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+echo "Эта команда не доработана, codex сталкивается с ошибкой no go files to analyze"
+exit 1
+
+codex exec \
+ --sandbox workspace-write \
+    "исправь замечания линтера в несколько итераций по кругу, запуская команду 'golangci-lint -c /home/glex/projects/br-accounts/.golangci.yaml run' в текущей рабочей директории, до тех пор пока линтер не покажет что больше нет замечаний"
