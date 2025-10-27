@@ -1,6 +1,9 @@
 #!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 set -e
+
+$DIR/commit-auto
 
 PROMPT="${@}"
 
@@ -8,3 +11,5 @@ codex exec \
  --full-auto \
  --sandbox workspace-write \
  "$PROMPT"
+
+$DIR/commit-auto

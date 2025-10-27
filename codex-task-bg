@@ -5,4 +5,5 @@ PROMPT="${@}"
 
 TASK_ID="codex-task-$(date +%Y%m%d-%H%M%S)-$$"
 
-screen -S "$TASK_ID" -L -Logfile "$PWD/$TASK_ID.log" -dm bash -lc "$DIR/codex-task $PROMPT"
+mkdir -p "$PWD/.codex-task"
+screen -S "$TASK_ID" -L -Logfile "$PWD/.codex-task/$TASK_ID.log" -dm bash -lc "$DIR/codex-task $PROMPT"
