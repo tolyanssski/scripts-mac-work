@@ -1,3 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-git push -u origin "$(git branch --show-current)"
+# Убедимся, что мы в репозитории
+git rev-parse --is-inside-work-tree >/dev/null
+
+# Текущая ветка (или SHA в detached HEAD)
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$branch" == "HEAD" ]]; then
+  branch="$(git rev-parse --short HEAD)"
+fi
+
+# Если есть несохранённые изменения (staged/unstaged/untracked) — коммитим авто-скриптом
+if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
+  command -v commit-auto >/dev/null || { echo "commit-auto не найден в PATH"; exit 1; }
+  echo "Найдены незакоммиченные изменения — запускаю commit-auto…"
+  commit-auto
+fi
+
+# Пушим текущую ветку на origin и выставляем upstream
+git push -u origin "$branch"
