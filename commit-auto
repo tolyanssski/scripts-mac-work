@@ -2,15 +2,23 @@
 
 set -e
 
+# Убедимся, что мы в репозитории
+git rev-parse --is-inside-work-tree >/dev/null
+
 FILENAME=tolyanski_msg.txt
 rm -fv $FILENAME
 
-codex exec \
- --sandbox workspace-write \
- "describe commit message for current git changes, save the message to file $FILENAME so I can use it in scripts"
+if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
+    codex exec \
+    --sandbox workspace-write \
+    "describe commit message for current git changes, save the message to file $FILENAME so I can use it in scripts"
 
-set +e
-git add -A . ":!$FILENAME"
-set -e
-git commit -F $FILENAME
-rm -vf $FILENAME
+    set +e
+    git add -A . ":!$FILENAME"
+    set -e
+    git commit -F $FILENAME
+    rm -vf $FILENAME
+else
+    echo "Нет несохраненных изменений"
+    exit 0
+fi
