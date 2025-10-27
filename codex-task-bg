@@ -1,9 +1,0 @@
-#!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-PROMPT="${@}"
-
-TASK_ID="codex-task-$(date +%Y%m%d-%H%M%S)-$$"
-
-mkdir -p "$PWD/.codex-task"
-screen -S "$TASK_ID" -L -Logfile "$PWD/.codex-task/$TASK_ID.log" -dm bash -lc "$DIR/codex-task $PROMPT"
