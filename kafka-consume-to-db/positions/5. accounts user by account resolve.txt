@@ -1,0 +1,13 @@
+В grpc сервере появился новый метод ResolveUserIDByAccount, который надо реализовать. Для его реализации в grpc сервер пробрось зависимостью через DI репозиторий, у которого вызови соответствующий метод поиска по сущностям ent.Account (а если такого метода нет, то реализуй) и сконвертируй полученное entity в ответ grpc-сервера. В БД у нас userID это uuid, в grpc оно string, не забывай конвертировать где что требуется. А если ничего не найдено, то в сервере верни userID = nil, без ошибок.
+
+proto-схема выглядит так:
+
+rpc ResolveUserIDByAccount(ResolveUserIDByAccountRequest) returns (ResolveUserIDByAccountResponse) {}
+
+message ResolveUserIDByAccountRequest {
+  int64 account_id = 1;
+}
+
+message ResolveUserIDByAccountResponse {
+  optional string user_id = 1;
+}
