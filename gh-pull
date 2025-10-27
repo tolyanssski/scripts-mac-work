@@ -1,0 +1,5 @@
+#!/bin/bash
+
+git pull gh "$(git branch --show-current)"
+git commit --amend -m "$(git show -s --format=%b HEAD)"
+git push gh -f

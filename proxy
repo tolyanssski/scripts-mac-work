@@ -1,7 +1,0 @@
-#!/bin/bash
-
-while true
-do
-	killall ssh
-	ssh -D 7777 -J node@93.95.97.12 node@45.82.254.167
-done
