@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+FILENAME=tolyanski_msg.txt
+rm -fv $FILENAME
+
+codex exec \
+ --sandbox workspace-write \
+ "describe commit message for current git changes, save the message to file $FILENAME so I can use it in scripts"
+
+set +e
+git add -A . ":!$FILENAME"
+set -e
+git commit -F $FILENAME
+rm -vf $FILENAME
