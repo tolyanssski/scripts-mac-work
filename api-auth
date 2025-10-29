@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+PAYLOAD='{"email":"tolyanski@tuta.com","password":"termit123!","refId":"ref-123","utmSource":"campaign","utmMedium":"cpc","utmCampaign":"spring-launch","utmTerm":"auth","utmContent":"banner"}'
+
+curl -i \
+  -X POST \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "${PAYLOAD}" \
+  "https://api.glexglobal.com/auth/v1/log-in"
+
+printf '\n\n'
