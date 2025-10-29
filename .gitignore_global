@@ -1,3 +1,5 @@
 tolyanski_*
 codex-task-*.log
 .codex-task
+.api-call
+.gocache
