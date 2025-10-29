@@ -11,7 +11,7 @@ rm -fv $FILENAME
 if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
     codex exec \
     --sandbox workspace-write \
-    "describe commit message for current git changes, make it in sarcastic and cynic manner in English, save the message to file $FILENAME so I can use it in scripts"
+    "describe commit message for current git changes in English, save the message to file $FILENAME so I can use it in scripts"
 
     set +e
     git add -A . ":!$FILENAME"
