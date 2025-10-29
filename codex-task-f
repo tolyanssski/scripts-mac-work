@@ -7,7 +7,7 @@ TASK_ID="codex-task-$(date +%Y%m%d-%H%M%S)-$$"
 LOG_FILE=$PWD/.codex-task/logs/$TASK_ID.log
 RESULT_FILE=$PWD/.codex-task/logs/$TASK_ID.RESULT.log
 
-PROMPT_FILE=$DIR/prompts/codex/$PROMPT_FILE.md
+PROMPT_FILE=$PWD/.codex-task/prompts/$PROMPT_FILE.md
 
 if [ ! -f "$PROMPT_FILE" ]; then
     echo "File does not exist: $PROMPT_FILE"
