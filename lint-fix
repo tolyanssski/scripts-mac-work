@@ -10,6 +10,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 set -uo pipefail
 
+# Проверяем, что запускаемся из корня Go-модуля
+if [[ ! -f "go.mod" ]]; then
+  echo "go.mod не найден в текущей директории: $(pwd)" >&2
+  echo "Запусти скрипт из корня Go-проекта." >&2
+  exit 2
+fi
+
 if ! command -v golangci-lint >/dev/null 2>&1; then
   echo "golangci-lint не найден в PATH" >&2
   exit 127
