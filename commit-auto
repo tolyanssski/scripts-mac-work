@@ -5,7 +5,7 @@ set -e
 # Убедимся, что мы в репозитории
 git rev-parse --is-inside-work-tree >/dev/null
 
-FILENAME=tolyanski_msg.txt
+FILENAME=$PWD/.codex-task/commit_message.txt
 rm -fv $FILENAME
 
 if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
@@ -14,7 +14,7 @@ if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
     "describe commit message for current git changes in English, save the message to file $FILENAME so I can use it in scripts"
 
     set +e
-    git add -A . ":!$FILENAME"
+    git add -A .
     set -e
     git commit -F $FILENAME
     rm -vf $FILENAME
