@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# purge-cache-history.sh
+# Удаляет .cache из всей истории и восстанавливает remote 'origin'
+set -Eeuo pipefail
+
+TARGET_DIR="${1:-.cache}"      # что выпилить (папка/путь)
+REMOTE="${2:-origin}"          # куда пушить после переписывания (по умолчанию origin)
+
+git rev-parse --is-inside-work-tree >/dev/null || { echo "Не в git-репозитории"; exit 1; }
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Есть незакоммиченные изменения. Сначала commit/stash."; exit 1
+fi
+
+# Сохраняем адреса origin (если был настроен)
+ORIGIN_FETCH_URL="$(git remote get-url origin 2>/dev/null || true)"
+ORIGIN_PUSH_URL="$(git remote get-url --push origin 2>/dev/null || true)"
+
+# Проверяем наличие git-filter-repo
+if git filter-repo -h >/dev/null 2>&1; then
+  TOOL="git filter-repo"
+elif command -v git-filter-repo >/dev/null 2>&1; then
+  TOOL="git-filter-repo"
+else
+  echo "Нет git-filter-repo. Установи:  pip install --user git-filter-repo"; exit 2
+fi
+
+CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
+
+# Переписываем историю, выпиливая TARGET_DIR
+export FILTER_REPO_SQUELCH_PROGRESS=1
+$TOOL --force \
+  --path "$TARGET_DIR" \
+  --path-glob "$TARGET_DIR/**" \
+  --invert-paths
+
+# Чистим хвосты
+git for-each-ref --format='%(refname)' refs/original/ | xargs -r -n1 git update-ref -d
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+
+# Восстанавливаем origin, если он был
+if [[ -n "${ORIGIN_FETCH_URL}" ]]; then
+  if git remote get-url origin >/dev/null 2>&1; then
+    git remote set-url origin "${ORIGIN_FETCH_URL}"
+  else
+    git remote add origin "${ORIGIN_FETCH_URL}"
+  fi
+  # Если push-URL отличался и был задан — вернём его тоже
+  if [[ -n "${ORIGIN_PUSH_URL}" && "${ORIGIN_PUSH_URL}" != "${ORIGIN_FETCH_URL}" ]]; then
+    git remote set-url --push origin "${ORIGIN_PUSH_URL}"
+  fi
+  echo "Remote 'origin' восстановлен: $(git remote get-url origin)"
+fi
+
+
+exit 0
+
+# Пушим переписанную историю (в REMOTE, по умолчанию origin)
+git push --force --prune "$REMOTE" --all
+git push --force "$REMOTE" --tags
+
+echo "Готово: '$TARGET_DIR' удалён из истории. Форс-пуш в '$REMOTE' выполнен."
+[[ -n "$CURRENT_BRANCH" ]] && echo "Текущая ветка была: $CURRENT_BRANCH"
+echo "Остальным клонам нужно переклонировать или сделать hard reset на новую историю."

@@ -1,8 +1,49 @@
 #!/usr/bin/env bash
+# lint-loop.sh
+# Usage:
+#   lint-loop.sh <lint_log_file> [<command_on_fail> [args...]]
+# Example:
+#   lint-loop.sh lint.txt make fix-lint
+#   MAX_ITERS=5 lint-loop.sh /tmp/lint.out gofumpt -w .
 
-echo "Эта команда не доработана, codex сталкивается с ошибкой no go files to analyze"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -uo pipefail
+
+if ! command -v golangci-lint >/dev/null 2>&1; then
+  echo "golangci-lint не найден в PATH" >&2
+  exit 127
+fi
+
+LINT_LOG=$PWD/.codex-task/linter.log
+if [[ -z "${LINT_LOG}" ]]; then
+  echo "Укажите файл для вывода линтера: lint-loop.sh <lint_log_file> [command_on_fail ...]" >&2
+  exit 2
+fi
+shift || true
+
+rm -f $LINT_LOG
+mkdir -p $PWD/.codex-task
+
+MAX_ITERS=${MAX_ITERS:-10}
+
+for (( i=1; i<=MAX_ITERS; i++ )); do
+  echo "[${i}/${MAX_ITERS}] golangci-lint run ./... -> ${LINT_LOG}"
+  # Перезаписываем файл на каждой итерации, собираем и stdout, и stderr
+  if golangci-lint run ./... >"${LINT_LOG}" 2>&1; then
+    echo "Линтер прошёл без ошибок. Выходим."
+    $DIR/commit-auto
+    exit 0
+  else
+    rc=$?
+    echo "Линтер вернул код ${rc}. Выполняю команду на фикс"
+    
+    codex exec \
+     --sandbox workspace-write \
+     "Please see the contents of the file $LINT_LOG, and fix the linter issues described there."
+    
+  fi
+done
+
+echo "Достигнут лимит попыток (${MAX_ITERS}). Последний вывод см. в ${LINT_LOG}."
 exit 1
-
-codex exec \
- --sandbox workspace-write \
-    "исправь замечания линтера в несколько итераций по кругу, запуская команду 'golangci-lint -c /home/glex/projects/br-accounts/.golangci.yaml run' в текущей рабочей директории, до тех пор пока линтер не покажет что больше нет замечаний"

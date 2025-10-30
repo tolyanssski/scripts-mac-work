@@ -8,7 +8,7 @@ LOG_FILE=$PWD/.codex-task/logs/$TASK_ID.log
 RESULT_FILE=$PWD/.codex-task/logs/$TASK_ID.RESULT.log
 
 POST_PROMPT_1="Не делай вызовов go test, они пока не работают, решай проблему без запуска тестов"
-POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE"
+POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE. Любые временные файлы, в том числе кеш, клади в папку .cache."
 
 mkdir -p "$PWD/.codex-task"
 screen -S "$TASK_ID" -L -Logfile "$LOG_FILE" -dm bash -lc "$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
