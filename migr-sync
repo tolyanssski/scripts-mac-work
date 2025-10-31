@@ -1,0 +1,28 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -e
+
+SRC_PROJECT=$PWD
+DEST_PROJECT=$HOME/projects/br-migrations
+
+# Убедимся, что мы в репозитории
+git rev-parse --is-inside-work-tree >/dev/null
+
+if grep -Fq -- 'atlas migrate' Makefile; then
+  echo "Данный репозиторий имеет свою БД, миграции переносить в общий репо не требуется"
+  exit 0
+fi
+
+cd $DEST_PROJECT
+git pull
+
+rsync -Pvr $SRC_PROJECT/migrations/ $DEST_PROJECT/migrations/
+
+cd $DEST_PROJECT
+make rehash
+$DIR/push
+
+cd $SRC_PROJECT
+rm -R migrations
+$DIR/push
