@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+function doTask {
+    projectName=$1
+    cd /home/glex/projects/$projectName
+    codex-task-f tags
+    make gen-go
+    lint-fix
+    push
+}
+
+function doAuth {
+    cd /home/glex/projects/br-auth
+    make gen-go
+    lint-fix
+}
+
+doTask br-accounts
+doTask br-users
+doTask br-kyc
+doTask br-billing
+doTask br-partnership
+doTask br-trading
+doTask br-support
+
+doAuth
