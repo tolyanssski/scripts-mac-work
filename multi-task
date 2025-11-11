@@ -5,18 +5,14 @@ set -e
 function doTask {
     projectName=$1
     cd /home/glex/projects/$projectName
-    git checkout tags || git checkout -b tags
-    codex-task-f tags
-    make gen-go
+    codex-task-f-global redis-cluster
     lint-fix
     push
 }
 
-function doAuth {
-    cd /home/glex/projects/br-auth
-    git checkout tags || git checkout -b tags
-    make gen-go
-    lint-fix
+function doBilling {
+    cd /home/glex/projects/br-billing
+    codex-task-f-global redis-cluster
     push
 }
 
@@ -25,5 +21,6 @@ doTask br-kyc
 doTask br-partnership
 doTask br-trading
 doTask br-support
+doTask br-accounts
 
-doAuth
+doBilling

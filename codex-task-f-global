@@ -1,0 +1,25 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+PROMPT_FILE="${@}"
+
+TASK_ID="codex-task-$(date +%Y%m%d-%H%M%S)-$$"
+LOG_FILE=$PWD/.codex-task/logs/$TASK_ID.log
+RESULT_FILE=$PWD/.codex-task/logs/$TASK_ID.RESULT.log
+
+PROMPT_FILE=$DIR/prompts/codex/$PROMPT_FILE.md
+
+if [ ! -f "$PROMPT_FILE" ]; then
+    echo "File does not exist: $PROMPT_FILE"
+    exit 1
+fi
+
+PROMPT="Текст задания прочитай в файле: $PROMPT_FILE, содержимое файла считай своим промптом"
+
+POST_PROMPT_1="Не делай вызовов go test, они пока не работают, решай проблему без запуска тестов"
+POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE"
+
+mkdir -p "$PWD/.codex-task"
+screen -S "$TASK_ID" -L -Logfile "$LOG_FILE" -dm bash -lc "$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
+screen -r $TASK_ID
+cat $RESULT_FILE
