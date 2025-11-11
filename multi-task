@@ -5,6 +5,7 @@ set -e
 function doTask {
     projectName=$1
     cd /home/glex/projects/$projectName
+    git checkout tags || git checkout -b tags
     codex-task-f tags
     make gen-go
     lint-fix
@@ -13,14 +14,14 @@ function doTask {
 
 function doAuth {
     cd /home/glex/projects/br-auth
+    git checkout tags || git checkout -b tags
     make gen-go
     lint-fix
+    push
 }
 
-doTask br-accounts
 doTask br-users
 doTask br-kyc
-doTask br-billing
 doTask br-partnership
 doTask br-trading
 doTask br-support

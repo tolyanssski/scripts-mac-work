@@ -1,0 +1,14 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -e
+
+# Мержит origin/master в dev, резолвит все конфликты в пользу dev
+# ВНИМАНИЕ!!! Если были ХФ прямо на мастере, то этот скрипт их затрет!
+
+git checkout dev
+git pull
+
+codex exec \
+ --sandbox workspace-write \
+ "Убедись что ты находишься на ветке dev. Вмержи origin/master в текущую ветку. Если появятся конфликты, разрули их все, при каждом конфликте используй ту версию что на dev"
