@@ -4,8 +4,31 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 $DIR/.gitignore_global $HOME/.gitignore
 
 # на УДАЛЁННОМ сервере
-echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee /etc/sysctl.d/60-unprivileged-ports.conf
-echo 'net.ipv6.ip_unprivileged_port_start=0' | sudo tee -a /etc/sysctl.d/60-unprivileged-ports.conf
-sudo sysctl --system
+# echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee /etc/sysctl.d/60-unprivileged-ports.conf
+# echo 'net.ipv6.ip_unprivileged_port_start=0' | sudo tee -a /etc/sysctl.d/60-unprivileged-ports.conf
+# sudo sysctl --system
 
 git config --global --add url."git@ssh.gitlab.devsmart.ru:".insteadOf "https://gitlab.devsmart.ru/"
+
+echo 'export PATH="$HOME/projects/scripts-mac-work:$PATH"' >> ~/.zprofile
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+brew update
+brew install protobuf
+
+protoc --version
+
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.10
+
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.75.1
+
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.zprofile
+source ~/.zprofile
+
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.10
+# или просто
+# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+# можно и @latest, но стабильный тег сейчас v1.5.1

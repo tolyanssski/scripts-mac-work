@@ -7,6 +7,6 @@ curl -i \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d "${PAYLOAD}" \
-  "https://api.glexglobal.com/auth/v1/log-in"
+  "https://api.singapore.glexdev.com/auth/v1/log-in"
 
 printf '\n\n'
