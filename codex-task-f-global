@@ -20,6 +20,7 @@ POST_PROMPT_1="Не делай вызовов go test, они пока не ра
 POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE"
 
 mkdir -p "$PWD/.codex-task"
-screen -S "$TASK_ID" -L -Logfile "$LOG_FILE" -dm bash -lc "$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
-screen -r $TASK_ID
-cat $RESULT_FILE
+#screen -S "$TASK_ID" -L -Logfile "$LOG_FILE" -dm bash -lc "$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
+#screen -r $TASK_ID
+$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2
+#cat $RESULT_FILE
