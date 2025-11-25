@@ -17,8 +17,8 @@ if [[ ! -f "go.mod" ]]; then
   exit 2
 fi
 
-if ! command -v golangci-lint >/dev/null 2>&1; then
-  echo "golangci-lint не найден в PATH" >&2
+if ! command -v make >/dev/null 2>&1; then
+  echo "make не найден в PATH" >&2
   exit 127
 fi
 
@@ -35,9 +35,8 @@ mkdir -p $PWD/.codex-task
 MAX_ITERS=${MAX_ITERS:-10}
 
 for (( i=1; i<=MAX_ITERS; i++ )); do
-  echo "[${i}/${MAX_ITERS}] golangci-lint run ./... -> ${LINT_LOG}"
   # Перезаписываем файл на каждой итерации, собираем и stdout, и stderr
-  if golangci-lint run ./... >"${LINT_LOG}" 2>&1; then
+  if make lint >"${LINT_LOG}" 2>&1; then
     echo "Линтер прошёл без ошибок. Выходим."
     $DIR/commit-auto
     exit 0
@@ -47,7 +46,7 @@ for (( i=1; i<=MAX_ITERS; i++ )); do
     
     codex exec \
      --sandbox workspace-write \
-     "Please see the contents of the file $LINT_LOG, and fix the linter issues described there."
+     "Please see the contents of the file $LINT_LOG, and fix the linter/builder issues described there."
     
   fi
 done
