@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# lint-loop.sh
+# Usage:
+#   lint-loop.sh <lint_log_file> [<command_on_fail> [args...]]
+# Example:
+#   lint-loop.sh lint.txt make fix-lint
+#   MAX_ITERS=5 lint-loop.sh /tmp/lint.out gofumpt -w .
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -uo pipefail
+
+# Проверяем, что запускаемся из корня Go-модуля
+if [[ ! -f "go.mod" ]]; then
+  echo "go.mod не найден в текущей директории: $(pwd)" >&2
+  echo "Запусти скрипт из корня Go-проекта." >&2
+  exit 2
+fi
+
+if ! command -v make >/dev/null 2>&1; then
+  echo "make не найден в PATH" >&2
+  exit 127
+fi
+
+TEST_LOG=$PWD/.codex-task/test.log
+if [[ -z "${TEST_LOG}" ]]; then
+  echo "Укажите файл для вывода тестов: lint-loop.sh <TEST_log_file> [command_on_fail ...]" >&2
+  exit 2
+fi
+shift || true
+
+rm -f $TEST_LOG
+mkdir -p $PWD/.codex-task
+
+MAX_ITERS=${MAX_ITERS:-10}
+
+for (( i=1; i<=MAX_ITERS; i++ )); do
+  # Перезаписываем файл на каждой итерации, собираем и stdout, и stderr
+  if make test >"${TEST_LOG}" 2>&1; then
+    echo "Тест прошёл без ошибок. Выходим."
+    $DIR/commit-auto
+    exit 0
+  else
+    rc=$?
+    echo "Тестер вернул код ${rc}. Выполняю команду на фикс"
+    
+    codex exec \
+     --sandbox workspace-write \
+     "Please see the contents of the file $TEST_LOG, and fix the unit test issues described there."
+    
+  fi
+done
+
+echo "Достигнут лимит попыток (${MAX_ITERS}). Последний вывод см. в ${TEST_LOG}."
+exit 1
