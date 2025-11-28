@@ -46,7 +46,7 @@ for (( i=1; i<=MAX_ITERS; i++ )); do
     
     codex exec \
      --sandbox workspace-write \
-     "Please see the contents of the file $TEST_LOG, and fix the unit test issues described there."
+     "Please see the contents of the file $TEST_LOG, and fix the unit test issues described there. But NEVER change the main code logic, except for syntax errors. Always change tests only so they will match the logic of the program's code."
     
   fi
 done
