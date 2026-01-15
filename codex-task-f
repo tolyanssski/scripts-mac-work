@@ -25,3 +25,5 @@ mkdir -p "$PWD/.codex-task"
 #screen -r $TASK_ID
 $DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2
 cat $RESULT_FILE
+
+$DIR/lint-fix
