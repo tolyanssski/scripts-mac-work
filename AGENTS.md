@@ -53,6 +53,196 @@
 не обязательно.
 Проверять на nil эти поля-зависимости в рабочей логике не нужно.
 
+## Работа с конфигурацией
+
+### У каждого пакета/сервиса свой локальный Config
+
+У каждого пакета/сервиса, если требуется, должна быть своя структура `Config`, локальная по отношению к пакету (лежит внутри конкретного пакета, к которому относится). 
+В этой структуре `Config` находятся все нужные поля.
+В некоторых случаях структура `Config` может находиться в другом месте, и там где это так, используй то что 
+уже есть. Также в некоторых уже существующих пакетах иногда структура конфигурации может называться по-другому (Params, Options и тд) - в этом случае пользуйся тем что есть.
+
+Для новых пакетов/сервисов строго следуй правилу "структура конфига сервиса рядом с сервисом в одном с ним пакете" и называй структуру всегда `Config`.
+
+Сам сервис в качестве одной из своих зависимостей принимает эту локальную структуру `Config`, которая подается
+ему в конструктор и пишется в локальное поле `config` или `conf`.
+
+Пример:
+
+```go
+package currencies
+
+// Конфигурация сервиса Currencies
+type FixerConfig struct {
+	Endpoint string `yaml:"endpoint"`
+	APIKey   string `yaml:"apiKey"`
+}
+type Config struct {
+	BaseCurrency      string      `yaml:"baseCurrency"`
+	PrimaryCurrencies []string    `yaml:"primaryCurrencies"`
+	Fixer             FixerConfig `yaml:"fixer"`
+}
+
+// Сама структура сервиса Currencies
+type Currencies struct {
+	logger    Logger
+	conf      Config
+	repo      Repository
+	providers []Provider
+
+	ratesToBase map[string]float64
+	mu          sync.RWMutex
+}
+
+// Конструктор сервиса Currencies
+func New(logger Logger, conf Config, repo Repository, providers []Provider) *Currencies {
+	return &Currencies{
+		logger:    logger,
+		conf:      conf,
+		repo:      repo,
+		providers: providers,
+	}
+}
+
+```
+
+Хотя в примере все показано в одном файле, `Config` можно вынести в отдельный файл `config.go`. 
+Главное, чтобы он лежал в том же пакете.
+В полях конфига всегда указывай yaml-теги.
+
+### Сборка конфига - в отдельном общем пакете
+
+В проекте внутри `internal` должен находиться один общий пакет `config`, который занимается загрузкой/сборкой
+всех конфигов других пакетов.
+В этом пакете главная структура `Config` в виде полей содержит данных конфигов других пакетов, примерно как показано в этом примере. То есть: общий пакет `config` знает обо всех локальных конфигах, но локальные конфиги
+ничего не знают об общем `config`.
+Также в этом общем пакете лежит файл `config.yml` с реальным данными конфигурации всех пакетов. Этот yaml-файл
+встраивается в приложение через `embed`.
+И в конструкторе вызывается библиотека `viper`, загружающая все данные из yaml-файла в поля конфига.
+Пример:
+
+```go
+package config
+
+import (...)
+
+//go:embed config.yml
+var configData string
+
+type Config struct {
+	WelcomeBonus welcomebonus.Config `yaml:"welcomeBonus"`
+	Currencies   currencies.Config   `yaml:"currencies"`
+	Rebate       rebate.Config       `yaml:"rebate"`
+	DepositBonus depositbonus.Config `yaml:"depositBonus"`
+	Balancer     balancer.Config     `yaml:"balancer"`
+	MtEvents     mtevents.Config     `yaml:"mtEvents"`
+	Rights       rights.Config       `yaml:"rights"`
+	CryptoLinks  cryptolinks.Config  `yaml:"cryptolinks"`
+}
+
+func Load() (Config, error) {
+	var err error
+	config := Config{}
+	viper.SetConfigType("yaml")
+
+	file := io.NopCloser(strings.NewReader(configData))
+	defer func() { _ = file.Close() }()
+
+	err = viper.ReadConfig(file)
+	if err != nil {
+		return Config{}, err
+	}
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
+}
+```
+
+### Некоторые поля переопределяются переменными окружения
+
+Часть полей (но далеко не все) переопределяются переменными окружения. Какие именно поля 
+должны переопределяться из `env`, указывается в отдельной структуре `Environment`, которая тоже находится
+в общем `config`-пакете. 
+Если что-то берется из переменных окружения, то у конфига должен быть конструктор, принимающий на входе
+структуру `Environment` со всеми полями, и внутри конструктора делается перезапись полей конфига теми что
+пришли в `Environment`.
+
+В каждой задаче я обычно явным оборазом говорю, какие переменные конфига должны браться из окружения.
+Если про какие-то поля конфига я такого не сказал, значит они хранятся только в конфиге и больше нигде (по ним
+не нужно использовать `env`'ы).
+
+Пример того как может выглядеть общий `Config` с переменными окружения:
+
+```go
+package config
+
+import (...)
+
+//go:embed config.yml
+var configData string
+
+type Environment struct {
+	FixerAPIKey string
+}
+
+type Config struct {
+	WelcomeBonus welcomebonus.Config `yaml:"welcomeBonus"`
+	Currencies   currencies.Config   `yaml:"currencies"`
+	Rebate       rebate.Config       `yaml:"rebate"`
+	DepositBonus depositbonus.Config `yaml:"depositBonus"`
+	Balancer     balancer.Config     `yaml:"balancer"`
+	MtEvents     mtevents.Config     `yaml:"mtEvents"`
+	Rights       rights.Config       `yaml:"rights"`
+	CryptoLinks  cryptolinks.Config  `yaml:"cryptolinks"`
+}
+
+func Load(e Environment) (Config, error) {
+	var err error
+	config := Config{}
+	viper.SetConfigType("yaml")
+
+	file := io.NopCloser(strings.NewReader(configData))
+	defer func() { _ = file.Close() }()
+
+	err = viper.ReadConfig(file)
+	if err != nil {
+		return Config{}, err
+	}
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	if e.FixerAPIKey != "" {
+		config.Currencies.Fixer.APIKey = e.FixerAPIKey
+	}
+
+	return config, nil
+}
+```
+
+И в таком случае DI-сборка приложения делается вот так:
+
+```go
+conf, err := config.Load(
+	config.Environment{
+		FixerAPIKey: os.Getenv("FIXER_API_KEY"),
+	}
+)
+```
+
+### Если нужно добавить новые поля в конфиг и/или есть инструкция брать что-то из конфига
+
+В этом случае делай следующее:
+- если конфига у пакета/сервиса совсем нет, создай его и пробрось через DI в сервис;
+- новые поля добавь как в структуру конфига, так и в yaml-файл, лежащий в общем config-пакете;
+- если видишь, что yaml-файл, из которого грузится конфиг, лежит в другом месте (не по тем правилам которые указаны здесь), то пользуйся тем что уже есть;
+- для новых полей: переопределение полей из переменных окружения делай только тогда, когда об этом явным образом указано в задаче.
+
+
 ## Работа с Locker
 
 В проектах при работе с сущностями часто используется паттерн `pessimitic offline lock` (by Martin Fowler). Это значит в ряде задач (особенно выполняющихся в фоне)
