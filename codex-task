@@ -1,17 +1,27 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-PROMPT="${@}"
+PROMPT_FILE="${@}"
 
 TASK_ID="codex-task-$(date +%Y%m%d-%H%M%S)-$$"
 LOG_FILE=$PWD/.codex-task/logs/$TASK_ID.log
 RESULT_FILE=$PWD/.codex-task/logs/$TASK_ID.RESULT.log
 
-POST_PROMPT_1="Не делай вызовов go test, они пока не работают, решай проблему без запуска тестов"
-POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE. Любые временные файлы, в том числе кеш, клади в папку .cache."
+PROMPT_FILE=$DIR/prompts/codex/$PROMPT_FILE.md
+AGENTS_FILE=$DIR/AGENTS.md
 
-mkdir -p "$PWD/.codex-task"
-#screen -S "$TASK_ID" -L -Logfile "$LOG_FILE" -dm bash -lc "$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
-#screen -r $TASK_ID
-$DIR/codex-task-fg $PROMPT. $POST_PROMPT_1. $POST_PROMPT_2
-cat $RESULT_FILE
+if [ ! -f "$PROMPT_FILE" ]; then
+    echo "File does not exist: $PROMPT_FILE"
+    exit 1
+fi
+
+POST_PROMPT_1="В качестве базовой шпаргалки используй информацию из AGENTS-файла $AGENTS_FILE: там даны общие рекомендации по типовым задачам, подходам и паттернам"
+POST_PROMPT_2="Всю иформацию о результатах выполнения задачи или ответ на вопрос запиши в файл $RESULT_FILE"
+
+PROMPT="Текст задания прочитай в файле: $PROMPT_FILE, содержимое файла считай своим промптом"
+
+codex exec \
+ --full-auto \
+ --skip-git-repo-check \
+ --sandbox workspace-write \
+ "$PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"

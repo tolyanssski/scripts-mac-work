@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PAYLOAD='{"email":"a.grigoriev@glexglobal.com","password":"Termit123!","refId":"ref-123","utmSource":"campaign","utmMedium":"cpc","utmCampaign":"spring-launch","utmTerm":"auth","utmContent":"banner"}'
+PAYLOAD='{"email":"test2@test.net","password":"testItEasyGlex4!","refId":"ref-123","utmSource":"campaign","utmMedium":"cpc","utmCampaign":"spring-launch","utmTerm":"auth","utmContent":"banner"}'
 
 curl -i \
   -X POST \
