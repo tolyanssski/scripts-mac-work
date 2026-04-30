@@ -16,10 +16,8 @@ fi
 if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
   command -v commit-auto >/dev/null || { echo "commit-auto не найден в PATH"; exit 1; }
   echo "Найдены незакоммиченные изменения — запускаю fixes and commit-auto…"
-  $DIR/test-fix
-  $DIR/lint-fix
   $DIR/commit-auto
 fi
 
-# Пушим текущую ветку на origin и выставляем upstream
+git pull
 git push -u origin "$branch"

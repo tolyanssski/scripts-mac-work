@@ -49,8 +49,11 @@ for dir in "$PARENT_DIR"/*/; do
     # --porcelain дает стабильный машинно-читаемый вывод.
     # Если вывод пустой — рабочее дерево чистое.
     if [[ -n "$(git status --porcelain)" ]]; then
-        echo "[RUN ] Uncommitted changes found, running push script"
+        echo "[RUN ] Uncommitted changes found, running scripts"
+        $DIR/test-fix
+        $DIR/lint-fix
         $DIR/push
+        $DIR/migr-sync
     else
         echo "[SKIP] Clean working tree"
     fi
