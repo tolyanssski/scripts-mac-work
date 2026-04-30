@@ -13,8 +13,13 @@ set -uo pipefail
 # Проверяем, что запускаемся из корня Go-модуля
 if [[ ! -f "go.mod" ]]; then
   echo "go.mod не найден в текущей директории: $(pwd)" >&2
-  echo "Запусти скрипт из корня Go-проекта." >&2
-  exit 2
+  exit 0
+fi
+
+# Проверяем, что есть Makefile
+if [[ ! -f "Makefile" ]]; then
+  echo "Makefile не найден в текущей директории: $(pwd)" >&2
+  exit 0
 fi
 
 if ! command -v make >/dev/null 2>&1; then

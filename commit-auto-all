@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+set -euo pipefail
+
+# Usage:
+#   ./commit-auto-all.sh /path/to/parent
+#
+# Скрипт проходит только по прямым вложенным папкам внутри parent.
+# Если папка является git-репозиторием и в ней есть незакоммиченные изменения,
+# выполняет внутри нее команду: commit-auto
+
+PARENT_DIR="$DIR/.."
+
+if [[ -z "$PARENT_DIR" ]]; then
+    echo "Usage: $0 /path/to/parent" >&2
+    exit 1
+fi
+
+if [[ ! -d "$PARENT_DIR" ]]; then
+    echo "Error: parent directory does not exist: $PARENT_DIR" >&2
+    exit 1
+fi
+
+if ! command -v commit-auto >/dev/null 2>&1; then
+    echo "Error: command 'commit-auto' not found in PATH" >&2
+    exit 1
+fi
+
+PARENT_DIR="$(cd "$PARENT_DIR" && pwd)"
+
+echo "[INFO] Parent dir: $PARENT_DIR"
+echo
+
+for dir in "$PARENT_DIR"/*/; do
+    [[ -d "$dir" ]] || continue
+
+    repo_dir="${dir%/}"
+
+    if [[ ! -d "$repo_dir/.git" ]]; then
+        echo "[SKIP] Not a git repo: $repo_dir"
+        continue
+    fi
+
+    echo "[CHECK] $repo_dir"
+
+    cd "$repo_dir"
+
+    # --porcelain дает стабильный машинно-читаемый вывод.
+    # Если вывод пустой — рабочее дерево чистое.
+    if [[ -n "$(git status --porcelain)" ]]; then
+        echo "[RUN ] Uncommitted changes found, running commit-auto"
+        $DIR/commit-auto
+    else
+        echo "[SKIP] Clean working tree"
+    fi
+
+    echo
+done
+
+echo "[DONE]"
