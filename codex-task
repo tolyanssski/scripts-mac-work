@@ -30,5 +30,5 @@ codex exec \
  --sandbox workspace-write \
  "$PROMPT. $POST_PROMPT_1. $POST_PROMPT_2"
 
-$DIR/commit-auto-all
+$DIR/push-all
 cat "$RESULT_FILE"

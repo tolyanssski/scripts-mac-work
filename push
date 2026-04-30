@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 set -euo pipefail
 
 # Убедимся, что мы в репозитории
@@ -13,8 +15,10 @@ fi
 # Если есть несохранённые изменения (staged/unstaged/untracked) — коммитим авто-скриптом
 if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
   command -v commit-auto >/dev/null || { echo "commit-auto не найден в PATH"; exit 1; }
-  echo "Найдены незакоммиченные изменения — запускаю commit-auto…"
-  commit-auto
+  echo "Найдены незакоммиченные изменения — запускаю fixes and commit-auto…"
+  $DIR/test-fix
+  $DIR/lint-fix
+  $DIR/commit-auto
 fi
 
 # Пушим текущую ветку на origin и выставляем upstream
