@@ -12,18 +12,18 @@ set -uo pipefail
 
 # Проверяем, что запускаемся из корня Go-модуля
 if [[ ! -f "go.mod" ]]; then
-  echo "go.mod не найден в текущей директории: $(pwd)" >&2
+  echo "[lint-fix] go.mod не найден в текущей директории: $(pwd)" >&2
   exit 0
 fi
 
 # Проверяем, что есть Makefile
 if [[ ! -f "Makefile" ]]; then
-  echo "Makefile не найден в текущей директории: $(pwd)" >&2
+  echo "[lint-fix] Makefile не найден в текущей директории: $(pwd)" >&2
   exit 0
 fi
 
 if ! command -v make >/dev/null 2>&1; then
-  echo "make не найден в PATH" >&2
+  echo "[lint-fix] make не найден в PATH" >&2
   exit 127
 fi
 

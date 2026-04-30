@@ -22,11 +22,6 @@ if [[ ! -d "$PARENT_DIR" ]]; then
     exit 1
 fi
 
-if ! command -v commit-auto >/dev/null 2>&1; then
-    echo "Error: command 'commit-auto' not found in PATH" >&2
-    exit 1
-fi
-
 PARENT_DIR="$(cd "$PARENT_DIR" && pwd)"
 
 echo "[INFO] Parent dir: $PARENT_DIR"
