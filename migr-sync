@@ -6,6 +6,25 @@ set -e
 SRC_PROJECT=$PWD
 DEST_PROJECT=$HOME/projects/br-migrations
 
+# Проверяем, что запускаемся из корня Go-модуля
+if [[ ! -f "go.mod" ]]; then
+  echo "go.mod не найден в текущей директории: $(pwd)" >&2
+  exit 0
+fi
+
+# Проверяем, что есть Makefile
+if [[ ! -f "Makefile" ]]; then
+  echo "Makefile не найден в текущей директории: $(pwd)" >&2
+  exit 0
+fi
+
+# Проверяем, что есть папка migrations
+if [[ ! -d "./migrations" ]]; then
+  echo "./migrations не найден в текущей директории: $(pwd)" >&2
+  exit 0
+fi
+
+
 # Убедимся, что мы в репозитории
 git rev-parse --is-inside-work-tree >/dev/null
 
