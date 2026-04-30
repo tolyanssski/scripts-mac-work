@@ -252,6 +252,74 @@ conf, err := config.Load(
 - если видишь, что yaml-файл, из которого грузится конфиг, лежит в другом месте (не по тем правилам которые указаны здесь), то пользуйся тем что уже есть;
 - для новых полей: переопределение полей из переменных окружения делай только тогда, когда об этом явным образом указано в задаче.
 
+## Если в задаче написано, что нужно сделать пул сервисов с общим фасадом
+
+В этом случае подразумевается, что все сервисы пула должны быть самостоятельными
+отдельными структурами, реализующими один интерфейс.
+И должен быть отдельно сервис (структура), выполняющая роль фасада:
+в не содержатся все сервисы из пула, а в публичных методах фасада определяется,
+какому сервису из пула передать выполнение метода.
+Весь пул сервисов кладется в отдельный пакет.
+И этот фасад уже передается как зависимость в другие пакеты проекта.
+Если сервисы пула выполняют похожие действия, не бойся того что в итоге это приведет к дублированию кода, как правило это "кажущееся" дублирование,
+основная цель этой задачи не сделать минимум кода, а сделать максимум поддерживаемости
+этого кода в будущем.
+
+Пример интерфейса который должны реализовать все сервисы пула:
+
+```go
+type TemplateDataBuilder interface {
+	SupportedKind() string
+	Build(ctx context.Context, req BuildRequest) (string, error)
+}
+```
+
+А вот пример скелета одной из реализаций.
+У каждой реализации должна быть возможность пробросить свои собственные уникальные зависимости
+через конструктор.
+
+```go
+type VerificationEmailDataBuilder struct {
+	cfg Config
+	logger Logger
+	fields []string
+}
+
+func NewVerificationEmailDataBuilder(cfg Config, logger Logger) *VerificationEmailDataBuilder {
+	return &VerificationEmailDataBuilder{
+		cfg: cfg,
+		logger: logger,
+		fields: []string{"CurrentYear", "Domain", "VerifyURL"},
+	}
+}
+
+func (b *VerificationEmailDataBuilder) SupportedKind() string {
+	return "verification_email"
+}
+
+func (b *VerificationEmailDataBuilder) Build(ctx context.Context, req BuildRequest) (string, error) {
+	// здесь полезная логика
+}
+```
+
+Соответственно сервис-фасад должен реально начать выполнять роль фасада.
+
+```go
+type Facade struct {
+	builders map[string]TemplateDataBuilder
+}
+
+func (f *Facade) Build(ctx context.Context, templateKind string, req BuildRequest) (string, error) {
+	builder, ok := f.builders[templateKind]
+	if !ok {
+		return "", fmt.Errorf(...)
+	}
+
+	return builder.Build(ctx, req)
+}
+```
+
+И вот этот фасад уже пробрасывай как зависимость (через интерфейс) туда где нужно.
 
 ## Работа с Locker
 
