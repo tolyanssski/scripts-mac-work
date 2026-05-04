@@ -97,8 +97,9 @@ RiskEventLog, заполнять его данными из dto, и сохран
 - user_id (uuid, index)
 - trigger_rule_id (varchar(255))
 - risk_event_ids (массив из uuid, по умолчанию пустой)
-- status (varchar(255), index) - в БД строка, а в коде тоже строка но с вариантами ready_to_process, sequence_waiting, pending, updating, processing, complete, canceled, error
+- status (varchar(255), index) - в БД строка, а в коде тоже строка но с вариантами ready_to_process, pending, processing, complete, canceled, error
 - status_message (text, nullable)
+- data (JSONB в БД, string в коде, nullable)
 - created_at
 - updated_at
 
@@ -186,3 +187,43 @@ type EventProcessor interface {
 
 Если вернулся непустой массив сработавших правил, пройдись циклом по массиву
 и по каждому правилу дерни метод-обработчик TriggerFormulaFacade.Execute().
+
+## Новый пакет OutcomeActions - пул сервисов
+
+В этом пакете должен лежать пул сервисов, фасад которого реализует такой интерфейс:
+
+```go
+type OutcomeActionsFacade interface {
+	PerformOutcomeAction(ctx context.Context, action entity.OutcomeAction, incident *entity.Incident) error
+}
+```
+
+В этом пакете должен лежать пул сервисов, реализующих такой нижестоящий интерфейс:
+
+```go
+type OutcomeActionPerformer interface {
+	Name() entity.OutcomeAction // всегда вернуть захардкоженное значение реализуемого action из enum
+	PerformOutcomeAction(ctx context.Context, incident *entity.Incident) error
+}
+```
+
+Сгенерируй множество заглушек реализаций для каждого существующего OutcomeAction,
+в соответствии со списком значений данного enum, указанного в секции про сущность TriggerRule.
+
+
+## БД-воркер для процессинга ранее созданных инцидентов
+
+В этом воркере каждые 5 секунд ищешь в БД идентификаторы инцидентов со статусом ready_to_process.
+По каждому найденному ID дергаем новый приватный метод-обработчик.
+В этом методе сначала ставим лок на incident id, затем подгружаем из БД свежую копию сущности Incident по ее ID,
+удостоверимся что ее статус действительно ready_to_process. Если статус другой, выходим без ошибок.
+Далее ставим статус processing, сохраняем в БД.
+После этого приступаем к полезной логике.
+
+Полезная логика в текущей версии пусть будет простая.
+Находим в БД триггерное правило по trigger_rule_id.
+
+Если у триггерного правила не указан никакой OutcomeAction,
+выходим без ошибок.
+
+Если указан, то дергаем метод OutcomeActionsFacade.PerformOutcomeAction для данного инцидента.
