@@ -34,6 +34,7 @@ CREATE TABLE trigger_rules (
     id        VARCHAR(255)   PRIMARY KEY,
     name      VARCHAR(255)   NOT NULL,
     trigger_formula VARCHAR(255) NOT NULL,
+    outcome_action VARCHAR(255) NULL,
     settings JSONB NULL,
     active            BOOLEAN       DEFAULT TRUE,
     created_at        TIMESTAMPTZ   DEFAULT NOW(),
@@ -42,6 +43,24 @@ CREATE TABLE trigger_rules (
     INDEX active   (active)
 );
 ```
+
+В коде для поля outcome_action запили enum с возможными значениями (русскоязычные пояснения сделай комментариями в коде):
+
+auto-pass — пропустить;
+flag-soft — пропустить, но записать подозрение;
+hold-4h, hold-24h, hold-manual — задержать операцию;
+block-account — заморозить аккаунт;
+block-trading — запретить новые сделки;
+reject-payment — отклонить платёж;
+hold-credit — деньги пришли, но не зачислять до проверки;
+hold-payout — вывод одобрен в UI, но деньги ещё не отправлять;
+reject-bonus — не выдать бонус;
+void-bonus — отменить уже выданный бонус;
+hold-affiliate-payout — задержать выплату партнёру;
+suspend-partner — временно заморозить партнёра;
+terminate-partner — окончательно отключить партнёра.
+
+В самой БД пусть останется строкой, чтобы можно было расширять список без боли.
 
 ## Сгенерируй DTO с событием RiskEvent
 
